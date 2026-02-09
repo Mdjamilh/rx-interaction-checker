@@ -89,3 +89,10 @@ export async function labelFor(ingredient: string, signal?: AbortSignal): Promis
 
 /** The label's page on DailyMed, the National Library of Medicine's label viewer. */
 export const dailyMedUrl = (setId: string) => `https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=${encodeURIComponent(setId)}`;
+
+/** FDA Established Pharmacologic Classes for an ingredient, e.g. "Nonsteroidal Anti-inflammatory Drug". */
+export async function classesFor(rxcui: string, signal?: AbortSignal): Promise<string[]> {
+  type Classes = { rxclassDrugInfoList?: { rxclassDrugInfo?: { rxclassMinConceptItem: { className: string } }[] } };
+  const data = await getJson<Classes>(`${RXNAV}/rxclass/class/byRxcui.json?rxcui=${encodeURIComponent(rxcui)}&relaSource=FDASPL&relas=has_epc`, signal);
+  return [...new Set((data?.rxclassDrugInfoList?.rxclassDrugInfo ?? []).map((d) => d.rxclassMinConceptItem.className))].sort();
+}
