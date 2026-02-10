@@ -128,3 +128,37 @@ describe("checkPairs", () => {
     expect(results[0]!.evidence.map((e) => [e.source, e.section])).toEqual([["hydrocodone", "Boxed warning"]]);
   });
 });
+
+describe("drug classes", () => {
+  it("reads FDA pharmacologic classes from RxClass", async () => {
+    const calls = mockFetch({
+      "rxclass/class/byRxcui.json": {
+        rxclassDrugInfoList: {
+          rxclassDrugInfo: [
+            { rxclassMinConceptItem: { className: "Platelet Aggregation Inhibitor" } },
+            { rxclassMinConceptItem: { className: "Nonsteroidal Anti-inflammatory Drug" } },
+            { rxclassMinConceptItem: { className: "Nonsteroidal Anti-inflammatory Drug" } },
+          ],
+        },
+      },
+    });
+    const { classesFor } = await import("./api");
+    expect(await classesFor("1191")).toEqual(["Nonsteroidal Anti-inflammatory Drug", "Platelet Aggregation Inhibitor"]);
+    expect(calls[0]).toContain("relas=has_epc");
+  });
+
+  it("matches a label that names the class instead of the drug, and says so", () => {
+    const meds: Medication[] = [
+      { name: "Coumadin", ingredients: [{ rxcui: "1", name: "warfarin" }] },
+      { name: "Aleve", ingredients: [{ rxcui: "2", name: "naproxen" }], classes: ["Nonsteroidal Anti-inflammatory Drug"] },
+    ];
+    const labels = new Map([
+      ["warfarin", { ingredient: "warfarin", setId: "w", effective: "", contraindications: "", boxedWarning: "", interactions: "Use caution with NSAIDs. Naproxen raises INR. Avoid alcohol." }],
+    ]);
+    const [pair] = checkPairs(meds, labels);
+    expect(pair!.evidence).toEqual([
+      { source: "warfarin", section: "Drug interactions", sentences: ["Naproxen raises INR."], setId: "w" },
+      { source: "warfarin", section: "Drug interactions", sentences: ["Use caution with NSAIDs."], setId: "w", viaClass: "Nonsteroidal Anti-inflammatory Drug" },
+    ]);
+  });
+});

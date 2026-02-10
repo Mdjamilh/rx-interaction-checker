@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { DrugSearch } from "./components/DrugSearch";
 import { Results } from "./components/Results";
-import { ingredientsFor, labelFor, type Label } from "./lib/api";
+import { classesFor, ingredientsFor, labelFor, type Label } from "./lib/api";
 import { checkPairs, type Medication, type PairResult } from "./lib/interactions";
 
 /** The list lives in the URL (?meds=Advil,warfarin), so a check can be shared or bookmarked. */
@@ -35,7 +35,13 @@ export default function App() {
   const check = async () => {
     setState({ status: "checking" });
     try {
-      const meds: Medication[] = await Promise.all(names.map(async (name) => ({ name, ingredients: await ingredientsFor(name) })));
+      const meds: Medication[] = await Promise.all(
+        names.map(async (name) => {
+          const ingredients = await ingredientsFor(name);
+          const classes = (await Promise.all(ingredients.map((i) => classesFor(i.rxcui)))).flat();
+          return { name, ingredients, classes: [...new Set(classes)] };
+        }),
+      );
       const labels = new Map<string, Label>();
       const ingredients = [...new Set(meds.flatMap((m) => m.ingredients.map((i) => i.name)))];
       await Promise.all(
@@ -93,8 +99,8 @@ export default function App() {
 
       <footer>
         <p>
-          <strong>This is not medical advice.</strong> It quotes FDA prescribing labels and can miss interactions that labels describe by drug class (for example
-          "NSAIDs") rather than by name. Always ask a pharmacist or doctor before starting, stopping or combining medicines.
+          <strong>This is not medical advice.</strong> It quotes FDA prescribing labels, matching drugs by name and by common class names (such as "NSAIDs"), and can
+          still miss interactions a label describes in other ways, such as by enzyme ("CYP3A4 inhibitors"). Always ask a pharmacist or doctor before starting, stopping or combining medicines.
         </p>
         <p>
           Data: <a href="https://lhncbc.nlm.nih.gov/RxNav/">RxNorm</a> from the National Library of Medicine and <a href="https://open.fda.gov/">openFDA</a>. Only drug

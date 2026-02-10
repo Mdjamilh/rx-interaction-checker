@@ -1,7 +1,9 @@
 import type { Ingredient, Label } from "./api";
+import { classPhrases } from "./classes";
 import { findMentions } from "./mentions";
 
-export type Medication = { name: string; ingredients: Ingredient[] };
+/** classes are FDA pharmacologic classes (from RxClass), used to catch "NSAIDs"-style mentions. */
+export type Medication = { name: string; ingredients: Ingredient[]; classes?: string[] };
 
 export type Evidence = {
   /** Whose label says it. */
@@ -9,6 +11,8 @@ export type Evidence = {
   section: "Boxed warning" | "Contraindications" | "Drug interactions";
   sentences: string[];
   setId: string;
+  /** Set when the label names the drug's class ("NSAIDs") rather than the drug itself. */
+  viaClass?: string;
 };
 
 export type PairResult = { a: Medication; b: Medication; evidence: Evidence[] };
@@ -47,8 +51,13 @@ function evidenceFor(from: Medication, about: Medication, labels: Map<string, La
     const label = labels.get(ingredient.name);
     if (!label) continue;
     for (const [section, key] of SECTIONS) {
-      const sentences = findMentions(label[key], names);
-      if (sentences.length) out.push({ source: ingredient.name, section, sentences, setId: label.setId });
+      const byName = findMentions(label[key], names);
+      if (byName.length) out.push({ source: ingredient.name, section, sentences: byName, setId: label.setId });
+      // Class mentions, skipping sentences already quoted for naming the drug.
+      for (const className of about.classes ?? []) {
+        const byClass = findMentions(label[key], classPhrases(className)).filter((s) => !byName.includes(s));
+        if (byClass.length) out.push({ source: ingredient.name, section, sentences: byClass, setId: label.setId, viaClass: className });
+      }
     }
   }
   return out;

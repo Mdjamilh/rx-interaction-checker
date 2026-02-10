@@ -1,5 +1,6 @@
 import { dailyMedUrl } from "../lib/api";
 import type { PairResult } from "../lib/interactions";
+import { classPhrases } from "../lib/classes";
 import { highlight } from "../lib/mentions";
 
 const label = (r: PairResult["a"]) => (r.ingredients.length && r.ingredients.map((i) => i.name).join(" + ") !== r.name.toLowerCase() ? `${r.name} (${r.ingredients.map((i) => i.name).join(" + ")})` : r.name);
@@ -22,7 +23,8 @@ export function Results({ pairs }: { pairs: PairResult[] }) {
           {p.evidence.map((e) => (
             <div key={`${e.source}-${e.section}`} className="evidence">
               <p className="where">
-                <span className={`section ${e.section === "Drug interactions" ? "" : "strong"}`}>{e.section}</span> in the {e.source} label ·{" "}
+                <span className={`section ${e.section === "Drug interactions" ? "" : "strong"}`}>{e.section}</span> in the {e.source} label
+                {e.viaClass && <> · mentions its class ({e.viaClass})</>} ·{" "}
                 <a href={dailyMedUrl(e.setId)} target="_blank" rel="noreferrer">
                   read the full label
                 </a>
@@ -30,7 +32,7 @@ export function Results({ pairs }: { pairs: PairResult[] }) {
               {e.sentences.map((s) => (
                 <blockquote key={s}>
                   {/* A quote from A's label names B, and the other way round. */}
-                  {highlight(s, (p.a.ingredients.some((i) => i.name === e.source) ? p.b : p.a).ingredients.map((i) => i.name)).map((part, i) =>
+                  {highlight(s, e.viaClass ? classPhrases(e.viaClass) : (p.a.ingredients.some((i) => i.name === e.source) ? p.b : p.a).ingredients.map((i) => i.name)).map((part, i) =>
                     part.match ? <mark key={i}>{part.text}</mark> : part.text,
                   )}
                 </blockquote>
