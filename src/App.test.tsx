@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { clearCache } from "./lib/fetching";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "./App";
@@ -28,7 +29,10 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  clearCache();
+});
 
 describe("App", () => {
   it("adds medications, checks them and quotes the label", async () => {
@@ -70,11 +74,11 @@ describe("App", () => {
   });
 
   it("explains network failures", async () => {
-    vi.stubGlobal("fetch", async () => new Response("down", { status: 503 }));
+    vi.stubGlobal("fetch", async () => new Response("down", { status: 500 }));
     window.history.replaceState(null, "", "/?meds=a1,b2");
     const user = userEvent.setup();
     render(<App />);
     await user.click(screen.getByRole("button", { name: "Check 2 medications" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't reach the drug databases (Request failed (503))");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't reach the drug databases (Request failed (500))");
   });
 });

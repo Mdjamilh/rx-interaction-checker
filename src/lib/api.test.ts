@@ -1,3 +1,4 @@
+import { clearCache } from "./fetching";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { dailyMedUrl, ingredientsFor, labelFor, suggest } from "./api";
@@ -14,7 +15,10 @@ function mockFetch(routes: Record<string, unknown>) {
   return calls;
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  clearCache();
+});
 
 describe("RxNorm", () => {
   it("suggests distinct names, shortest first", async () => {
