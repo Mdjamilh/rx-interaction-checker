@@ -18,7 +18,7 @@ function writeList(names: string[]) {
   window.history.replaceState(null, "", url);
 }
 
-type State = { status: "idle" } | { status: "checking" } | { status: "done"; pairs: PairResult[]; missing: string[] } | { status: "error"; message: string };
+type State = { status: "idle" } | { status: "checking" } | { status: "done"; pairs: PairResult[]; labels: Map<string, Label>; missing: string[] } | { status: "error"; message: string };
 
 export default function App() {
   const [names, setNames] = useState<string[]>(readList);
@@ -51,7 +51,7 @@ export default function App() {
         }),
       );
       const missing = meds.filter((m) => m.ingredients.length === 0).map((m) => m.name);
-      setState({ status: "done", pairs: checkPairs(meds.filter((m) => m.ingredients.length), labels), missing });
+      setState({ status: "done", pairs: checkPairs(meds.filter((m) => m.ingredients.length), labels), labels, missing });
     } catch (error) {
       setState({ status: "error", message: error instanceof Error ? error.message : "Something went wrong" });
     }
@@ -92,7 +92,7 @@ export default function App() {
         {state.status === "done" && (
           <>
             {state.missing.length > 0 && <p className="warn">Not recognized, so not checked: {state.missing.join(", ")}.</p>}
-            <Results pairs={state.pairs} />
+            <Results pairs={state.pairs} labels={state.labels} />
           </>
         )}
       </div>

@@ -1,11 +1,12 @@
-import { dailyMedUrl } from "../lib/api";
+import { dailyMedUrl, type Label } from "../lib/api";
 import type { PairResult } from "../lib/interactions";
 import { classPhrases } from "../lib/classes";
 import { highlight } from "../lib/mentions";
+import { labelDate } from "../lib/summary";
 
 const label = (r: PairResult["a"]) => (r.ingredients.length && r.ingredients.map((i) => i.name).join(" + ") !== r.name.toLowerCase() ? `${r.name} (${r.ingredients.map((i) => i.name).join(" + ")})` : r.name);
 
-export function Results({ pairs }: { pairs: PairResult[] }) {
+export function Results({ pairs, labels }: { pairs: PairResult[]; labels: Map<string, Label> }) {
   const flagged = pairs.filter((p) => p.evidence.length > 0);
   const clear = pairs.filter((p) => p.evidence.length === 0);
 
@@ -24,6 +25,11 @@ export function Results({ pairs }: { pairs: PairResult[] }) {
             <div key={`${e.source}-${e.section}`} className="evidence">
               <p className="where">
                 <span className={`section ${e.section === "Drug interactions" ? "" : "strong"}`}>{e.section}</span> in the {e.source} label
+                {labels.get(e.source) && (
+                  <>
+                    {labels.get(e.source)?.brand && ` (${labels.get(e.source)?.brand})`}, revised {labelDate(labels.get(e.source)?.effective ?? "")}
+                  </>
+                )}
                 {e.viaClass && <> · mentions its class ({e.viaClass})</>} ·{" "}
                 <a href={dailyMedUrl(e.setId)} target="_blank" rel="noreferrer">
                   read the full label
