@@ -73,6 +73,22 @@ describe("App", () => {
     expect(window.location.search).toBe("?meds=Coumadin");
   });
 
+  it("fills in an example list and copies a summary", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Use an example list" }));
+    expect(within(screen.getByRole("list", { name: "Your medications" })).getAllByRole("listitem")).toHaveLength(4);
+
+    window.history.replaceState(null, "", "/?meds=Coumadin,Advil");
+    render(<App />);
+    const check = screen.getAllByRole("button", { name: /^Check 2 medications$/ })[0]!;
+    await user.click(check);
+    const copy = await screen.findByRole("button", { name: "Copy a summary for your pharmacist" });
+    await user.click(copy);
+    expect(await navigator.clipboard.readText()).toContain("Coumadin + Advil");
+    expect(screen.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+  });
+
   it("explains network failures", async () => {
     vi.stubGlobal("fetch", async () => new Response("down", { status: 500 }));
     window.history.replaceState(null, "", "/?meds=a1,b2");

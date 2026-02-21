@@ -234,3 +234,31 @@ footer {
   overflow: hidden;
   clip-path: inset(50%);
 }
+
+.secondary {
+  margin-top: 20px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.example {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+button.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

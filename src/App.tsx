@@ -4,6 +4,7 @@ import { DrugSearch } from "./components/DrugSearch";
 import { Results } from "./components/Results";
 import { classesFor, ingredientsFor, labelFor, type Label } from "./lib/api";
 import { checkPairs, type Medication, type PairResult } from "./lib/interactions";
+import { plainSummary } from "./lib/summary";
 
 /** The list lives in the URL (?meds=Advil,warfarin), so a check can be shared or bookmarked. */
 function readList(): string[] {
@@ -19,6 +20,27 @@ function writeList(names: string[]) {
 }
 
 type State = { status: "idle" } | { status: "checking" } | { status: "done"; pairs: PairResult[]; labels: Map<string, Label>; missing: string[] } | { status: "error"; message: string };
+
+function CopySummary({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      className="secondary"
+      onClick={() =>
+        void navigator.clipboard.writeText(text).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+      }
+    >
+      {copied ? "Copied" : "Copy a summary for your pharmacist"}
+    </button>
+  );
+}
+
+/** A list with well-documented interactions, so the tool can be tried in one click. */
+const EXAMPLE = ["Coumadin", "Advil", "clarithromycin", "Lipitor"];
 
 export default function App() {
   const [names, setNames] = useState<string[]>(readList);
@@ -78,6 +100,14 @@ export default function App() {
             ))}
           </ul>
         )}
+        {names.length === 0 && (
+          <p className="example">
+            Not sure what to try?{" "}
+            <button type="button" className="link" onClick={() => setNames(EXAMPLE)}>
+              Use an example list
+            </button>
+          </p>
+        )}
         <button type="button" className="primary" disabled={names.length < 2 || state.status === "checking"} onClick={() => void check()}>
           {state.status === "checking" ? "Reading labels…" : names.length < 2 ? "Add at least two medications" : `Check ${names.length} medications`}
         </button>
@@ -93,6 +123,7 @@ export default function App() {
           <>
             {state.missing.length > 0 && <p className="warn">Not recognized, so not checked: {state.missing.join(", ")}.</p>}
             <Results pairs={state.pairs} labels={state.labels} />
+            <CopySummary text={plainSummary(state.pairs, state.labels)} />
           </>
         )}
       </div>
