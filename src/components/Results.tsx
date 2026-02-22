@@ -12,7 +12,7 @@ export function Results({ pairs, labels }: { pairs: PairResult[]; labels: Map<st
 
   return (
     <section aria-labelledby="results-title">
-      <h2 id="results-title">
+      <h2 id="results-title" tabIndex={-1}>
         {flagged.length === 0 ? "No label mentions found" : `${flagged.length} of ${pairs.length} ${pairs.length === 1 ? "pair is" : "pairs are"} mentioned in the labels`}
       </h2>
       {flagged.map((p) => (

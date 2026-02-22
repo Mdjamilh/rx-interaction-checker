@@ -55,7 +55,7 @@ describe("App", () => {
     expect(within(pair).getByText("Drug interactions")).toBeInTheDocument();
     expect(within(pair).getByText("ibuprofen", { selector: "mark" })).toBeInTheDocument();
     expect(within(pair).getByRole("link", { name: "read the full label" })).toHaveAttribute("href", "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=w1");
-    expect(screen.getByRole("heading", { name: "1 of 3 pairs are mentioned in the labels" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "1 of 3 pairs are mentioned in the labels" })).toHaveFocus();
     expect(screen.getByText(/Not mentioned in each other's labels: Coumadin \+ Metformin, Advil \+ Metformin/)).toBeInTheDocument();
   });
 
