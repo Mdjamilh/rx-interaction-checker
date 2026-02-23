@@ -262,3 +262,36 @@ button.link {
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Printing for a doctor's visit: just the list and the findings. */
+@media print {
+  :root {
+    --bg: #fff;
+    --surface: #fff;
+    --text: #000;
+  }
+
+  .search,
+  .chips button,
+  .primary,
+  .secondary,
+  .example {
+    display: none;
+  }
+
+  .panel,
+  .pair {
+    border-color: #999;
+    break-inside: avoid;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 11px;
+    word-break: break-all;
+  }
+}
+
+h2:focus {
+  outline: none;
+}
