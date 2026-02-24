@@ -62,3 +62,20 @@ function evidenceFor(from: Medication, about: Medication, labels: Map<string, La
   }
   return out;
 }
+
+export type Duplicate = { ingredient: string; medications: string[] };
+
+/**
+ * Entries that contain the same ingredient, such as "Advil" and "ibuprofen",
+ * or two cold medicines that both contain acetaminophen. Taking both doubles
+ * the dose, which no label comparison would flag.
+ */
+export function findDuplicates(meds: Medication[]): Duplicate[] {
+  const byIngredient = new Map<string, string[]>();
+  for (const m of meds) {
+    for (const i of new Set(m.ingredients.map((x) => x.name))) {
+      byIngredient.set(i, [...(byIngredient.get(i) ?? []), m.name]);
+    }
+  }
+  return [...byIngredient.entries()].filter(([, names]) => names.length > 1).map(([ingredient, medications]) => ({ ingredient, medications }));
+}

@@ -166,3 +166,14 @@ describe("drug classes", () => {
     ]);
   });
 });
+
+describe("findDuplicates", () => {
+  it("finds medications that share an ingredient", async () => {
+    const { findDuplicates } = await import("./interactions");
+    const med = (name: string, ...ingredients: string[]): Medication => ({ name, ingredients: ingredients.map((i) => ({ rxcui: i, name: i })) });
+    expect(findDuplicates([med("Advil", "ibuprofen"), med("ibuprofen", "ibuprofen"), med("Tylenol", "acetaminophen"), med("NyQuil", "acetaminophen", "doxylamine", "dextromethorphan"), med("Lipitor", "atorvastatin")])).toEqual([
+      { ingredient: "ibuprofen", medications: ["Advil", "ibuprofen"] },
+      { ingredient: "acetaminophen", medications: ["Tylenol", "NyQuil"] },
+    ]);
+  });
+});
