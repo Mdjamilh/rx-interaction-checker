@@ -212,6 +212,13 @@ mark {
   color: inherit;
 }
 
+.duplicate {
+  padding: 12px 14px;
+  border-left: 4px solid var(--serious);
+  border-radius: 8px;
+  background: var(--serious-soft);
+}
+
 .clear,
 .warn {
   color: var(--muted);

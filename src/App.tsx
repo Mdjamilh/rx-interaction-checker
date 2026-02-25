@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { DrugSearch } from "./components/DrugSearch";
 import { Results } from "./components/Results";
 import { classesFor, ingredientsFor, labelFor, type Label } from "./lib/api";
-import { checkPairs, type Medication, type PairResult } from "./lib/interactions";
+import { checkPairs, findDuplicates, type Duplicate, type Medication, type PairResult } from "./lib/interactions";
 import { plainSummary } from "./lib/summary";
 
 /** The list lives in the URL (?meds=Advil,warfarin), so a check can be shared or bookmarked. */
@@ -19,7 +19,7 @@ function writeList(names: string[]) {
   window.history.replaceState(null, "", url);
 }
 
-type State = { status: "idle" } | { status: "checking"; done: number; total: number } | { status: "done"; pairs: PairResult[]; labels: Map<string, Label>; missing: string[] } | { status: "error"; message: string };
+type State = { status: "idle" } | { status: "checking"; done: number; total: number } | { status: "done"; pairs: PairResult[]; labels: Map<string, Label>; missing: string[]; duplicates: Duplicate[]; unlabeled: string[] } | { status: "error"; message: string };
 
 function CopySummary({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -85,7 +85,9 @@ export default function App() {
       );
       if (signal.aborted) return;
       const missing = meds.filter((m) => m.ingredients.length === 0).map((m) => m.name);
-      setState({ status: "done", pairs: checkPairs(meds.filter((m) => m.ingredients.length), labels), labels, missing });
+      const unlabeled = ingredients.filter((i) => !labels.has(i));
+      const known = meds.filter((m) => m.ingredients.length);
+      setState({ status: "done", pairs: checkPairs(known, labels), labels, missing, duplicates: findDuplicates(known), unlabeled });
     } catch (error) {
       if (signal.aborted) return;
       setState({ status: "error", message: error instanceof Error ? error.message : "Something went wrong" });
@@ -140,7 +142,13 @@ export default function App() {
         )}
         {state.status === "done" && (
           <>
+            {state.duplicates.map((d) => (
+              <p key={d.ingredient} className="duplicate" role="alert">
+                <strong>Same ingredient twice:</strong> {d.medications.join(" and ")} both contain {d.ingredient}. Taking them together may double the dose.
+              </p>
+            ))}
             {state.missing.length > 0 && <p className="warn">Not recognized, so not checked: {state.missing.join(", ")}.</p>}
+            {state.unlabeled.length > 0 && <p className="warn">No FDA label found for {state.unlabeled.join(", ")}, so their own labels couldn't be checked.</p>}
             <Results pairs={state.pairs} labels={state.labels} />
             <CopySummary text={plainSummary(state.pairs, state.labels)} />
           </>
