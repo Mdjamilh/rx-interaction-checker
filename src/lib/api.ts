@@ -18,14 +18,24 @@ async function getJson<T>(url: string, signal?: AbortSignal): Promise<T | undefi
   return (await res.json()) as T;
 }
 
-/** Name suggestions for an autocomplete, best matches first. */
+/**
+ * Name suggestions for an autocomplete, in RxNorm's relevance order.
+ * option=1 limits results to current RxNorm concepts; without it, a prefix
+ * like "adv" matches wound dressings and nutrition products before Advil.
+ */
 export async function suggest(term: string, signal?: AbortSignal): Promise<string[]> {
-  if (term.trim().length < 2) return [];
+  if (term.trim().length < 3) return [];
   type Approx = { approximateGroup?: { candidate?: { name?: string; rank: string }[] } };
-  const data = await getJson<Approx>(`${RXNAV}/approximateTerm.json?term=${encodeURIComponent(term.trim())}&maxEntries=12`, signal);
-  const names = (data?.approximateGroup?.candidate ?? []).filter((c) => c.name).map((c) => c.name as string);
-  // RxNorm returns forms like "Lipitor 10 MG Oral Tablet"; keep distinct, short names first.
-  return [...new Set(names)].sort((a, b) => a.length - b.length).slice(0, 8);
+  const data = await getJson<Approx>(`${RXNAV}/approximateTerm.json?term=${encodeURIComponent(term.trim())}&maxEntries=12&option=1`, signal);
+  const seen = new Set<string>();
+  const names: string[] = [];
+  for (const c of data?.approximateGroup?.candidate ?? []) {
+    // The same name comes back in several capitalizations ("warfarin", "WARFARIN").
+    if (!c.name || seen.has(c.name.toLowerCase())) continue;
+    seen.add(c.name.toLowerCase());
+    names.push(c.name);
+  }
+  return names.slice(0, 8);
 }
 
 /**
@@ -38,7 +48,7 @@ export function ingredientsFor(name: string, signal?: AbortSignal): Promise<Ingr
 
 async function loadIngredients(name: string, signal?: AbortSignal): Promise<Ingredient[]> {
   type Approx = { approximateGroup?: { candidate?: { rxcui: string }[] } };
-  const match = await getJson<Approx>(`${RXNAV}/approximateTerm.json?term=${encodeURIComponent(name.trim())}&maxEntries=1`, signal);
+  const match = await getJson<Approx>(`${RXNAV}/approximateTerm.json?term=${encodeURIComponent(name.trim())}&maxEntries=1&option=1`, signal);
   const rxcui = match?.approximateGroup?.candidate?.[0]?.rxcui;
   if (!rxcui) return [];
 

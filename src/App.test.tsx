@@ -44,7 +44,7 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "Add at least two medications" })).toBeDisabled();
 
     // Pick from suggestions with the keyboard.
-    await user.type(input, "adv");
+    await user.type(input, "advi");
     await screen.findByRole("option", { name: "Advil" });
     await user.keyboard("{ArrowDown}{Enter}");
     await user.type(input, "Metformin{Enter}");

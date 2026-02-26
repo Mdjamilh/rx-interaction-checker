@@ -21,19 +21,20 @@ afterEach(() => {
 });
 
 describe("RxNorm", () => {
-  it("suggests distinct names, shortest first", async () => {
-    mockFetch({
-      "approximateTerm.json?term=lipi": {
-        approximateGroup: { candidate: [{ name: "Lipitor 10 MG Oral Tablet", rank: "1" }, { name: "Lipitor", rank: "1" }, { rank: "2" }, { name: "Lipitor", rank: "3" }] },
+  it("suggests distinct names in RxNorm's order, from current concepts only", async () => {
+    const calls = mockFetch({
+      "approximateTerm.json?term=warf": {
+        approximateGroup: { candidate: [{ name: "warfarin", rank: "1" }, { name: "WARFARIN", rank: "1" }, { rank: "2" }, { name: "warfarin Oral Tablet", rank: "3" }] },
       },
     });
-    expect(await suggest("lipi")).toEqual(["Lipitor", "Lipitor 10 MG Oral Tablet"]);
-    expect(await suggest("l")).toEqual([]);
+    expect(await suggest("warf")).toEqual(["warfarin", "warfarin Oral Tablet"]);
+    expect(calls[0]).toContain("option=1");
+    expect(await suggest("wa")).toEqual([]);
   });
 
   it("resolves a brand name to its ingredients", async () => {
     const calls = mockFetch({
-      "approximateTerm.json?term=Lipitor&maxEntries=1": { approximateGroup: { candidate: [{ rxcui: "153165" }] } },
+      "approximateTerm.json?term=Lipitor&maxEntries=1&option=1": { approximateGroup: { candidate: [{ rxcui: "153165" }] } },
       "rxcui/153165/related.json": { relatedGroup: { conceptGroup: [{ tty: "IN", conceptProperties: [{ rxcui: "83367", name: "Atorvastatin" }] }, { tty: "MIN" }] } },
     });
     expect(await ingredientsFor("Lipitor")).toEqual([{ rxcui: "83367", name: "atorvastatin" }]);
