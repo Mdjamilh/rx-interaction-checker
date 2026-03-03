@@ -34,7 +34,7 @@ export function findMentions(labelText: string, names: string[], limit = 4): str
     const key = sentence.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    found.push(sentence.length > 400 ? sentence.slice(0, 400).trimEnd() + "…" : sentence);
+    found.push(excerpt(sentence, pattern));
     if (found.length >= limit) break;
   }
   return found;
@@ -54,4 +54,18 @@ export function highlight(sentence: string, names: string[]): { text: string; ma
   }
   if (last < sentence.length) parts.push({ text: sentence.slice(last), match: false });
   return parts;
+}
+
+const MAX_QUOTE = 400;
+
+/**
+ * Long "sentences" are usually label tables. Keep a window around the match
+ * so the drug's name is always visible, instead of cutting it off.
+ */
+function excerpt(sentence: string, pattern: RegExp): string {
+  if (sentence.length <= MAX_QUOTE) return sentence;
+  const at = sentence.search(pattern);
+  const start = Math.max(0, Math.min(at - 150, sentence.length - MAX_QUOTE));
+  const end = Math.min(sentence.length, start + MAX_QUOTE);
+  return `${start > 0 ? "…" : ""}${sentence.slice(start, end).trim()}${end < sentence.length ? "…" : ""}`;
 }

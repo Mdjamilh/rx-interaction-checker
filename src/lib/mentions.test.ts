@@ -33,6 +33,20 @@ describe("findMentions", () => {
   });
 });
 
+describe("long table rows", () => {
+  it("keep a window around the match so the name stays visible", () => {
+    const row = `Table 2: Inhibitors ${"amiodarone, capecitabine, ".repeat(30)}clarithromycin, erythromycin ${"fluconazole, ".repeat(30)}end.`;
+    const [quote] = findMentions(row, ["clarithromycin"]);
+    expect(quote).toContain("clarithromycin");
+    expect(quote!.startsWith("…")).toBe(true);
+    expect(quote!.endsWith("…")).toBe(true);
+    expect(quote!.length).toBeLessThanOrEqual(402);
+
+    const early = findMentions(`Clarithromycin first. ${"x".repeat(10)}`, ["clarithromycin"]);
+    expect(early[0]).toBe("Clarithromycin first.");
+  });
+});
+
 describe("highlight", () => {
   it("marks every occurrence of the names", () => {
     expect(highlight("Ibuprofen and aspirin; more ibuprofen.", ["ibuprofen"])).toEqual([
