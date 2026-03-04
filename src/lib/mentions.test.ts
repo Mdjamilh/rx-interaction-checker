@@ -42,7 +42,7 @@ describe("long table rows", () => {
     expect(quote!.endsWith("…")).toBe(true);
     expect(quote!.length).toBeLessThanOrEqual(402);
 
-    const early = findMentions(`Clarithromycin first. ${"x".repeat(10)}`, ["clarithromycin"]);
+    const early = findMentions("Clarithromycin first. Something else entirely.", ["clarithromycin"]);
     expect(early[0]).toBe("Clarithromycin first.");
   });
 });
