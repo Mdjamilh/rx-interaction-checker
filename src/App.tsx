@@ -9,7 +9,7 @@ import { plainSummary } from "./lib/summary";
 /** The list lives in the URL (?meds=Advil,warfarin), so a check can be shared or bookmarked. */
 function readList(): string[] {
   const raw = new URLSearchParams(window.location.search).get("meds");
-  return raw ? raw.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 10) : [];
+  return raw ? raw.split(",").map((s) => s.trim()).filter(Boolean).slice(0, MAX_MEDS) : [];
 }
 
 function writeList(names: string[]) {
@@ -39,6 +39,9 @@ function CopySummary({ text }: { text: string }) {
   );
 }
 
+/** Each check reads every pair's labels, so the list is capped to keep it quick and polite to the APIs. */
+const MAX_MEDS = 10;
+
 /** A list with well-documented interactions, so the tool can be tried in one click. */
 const EXAMPLE = ["Coumadin", "Advil", "clarithromycin", "Lipitor"];
 
@@ -48,7 +51,7 @@ export default function App() {
 
   useEffect(() => writeList(names), [names]);
 
-  const add = (name: string) => setNames((list) => (list.some((n) => n.toLowerCase() === name.toLowerCase()) || list.length >= 10 ? list : [...list, name]));
+  const add = (name: string) => setNames((list) => (list.some((n) => n.toLowerCase() === name.toLowerCase()) || list.length >= MAX_MEDS ? list : [...list, name]));
   const remove = (name: string) => {
     setNames((list) => list.filter((n) => n !== name));
     setState({ status: "idle" });
@@ -108,7 +111,11 @@ export default function App() {
       </header>
 
       <div className="panel">
-        <DrugSearch onAdd={add} />
+        {names.length >= MAX_MEDS ? (
+          <p className="warn">That's {MAX_MEDS} medications, the most one check covers ({(MAX_MEDS * (MAX_MEDS - 1)) / 2} pairs). Remove one to add another.</p>
+        ) : (
+          <DrugSearch onAdd={add} />
+        )}
         {names.length > 0 && (
           <ul className="chips" aria-label="Your medications">
             {names.map((n) => (
