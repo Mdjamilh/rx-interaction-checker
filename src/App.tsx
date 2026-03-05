@@ -137,7 +137,10 @@ export default function App() {
       <div aria-live="polite" ref={resultsRef}>
         {state.status === "error" && (
           <p className="error" role="alert">
-            Couldn't reach the drug databases ({state.message}). Please try again.
+            Couldn't reach the drug databases ({state.message}).{" "}
+            <button type="button" className="link" onClick={() => void check()}>
+              Try again
+            </button>
           </p>
         )}
         {state.status === "done" && (
