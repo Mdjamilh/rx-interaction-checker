@@ -302,3 +302,20 @@ button.link {
 h2:focus {
   outline: none;
 }
+
+.how {
+  margin-top: 32px;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.how summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.how li + li {
+  margin-top: 6px;
+}

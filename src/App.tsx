@@ -165,6 +165,16 @@ export default function App() {
         )}
       </div>
 
+      <details className="how">
+        <summary>How this works</summary>
+        <ol>
+          <li>Each name is looked up in RxNorm, the National Library of Medicine's drug vocabulary, to find its active ingredients. Brand names such as Advil become ibuprofen.</li>
+          <li>For each ingredient, the newest FDA prescribing label is read from openFDA, along with the drug's official class (for example "Nonsteroidal Anti-inflammatory Drug").</li>
+          <li>For every pair, both labels' boxed warnings, contraindications and drug interaction sections are searched for the other drug's name or class, and the matching sentences are quoted.</li>
+          <li>Entries that share an ingredient are flagged separately, because taking both can double the dose.</li>
+        </ol>
+      </details>
+
       <footer>
         <p>
           <strong>This is not medical advice.</strong> It quotes FDA prescribing labels, matching drugs by name and by common class names (such as "NSAIDs"), and can
