@@ -4,6 +4,7 @@ import { DrugSearch } from "./components/DrugSearch";
 import { Results } from "./components/Results";
 import { classesFor, ingredientsFor, labelFor, type Label } from "./lib/api";
 import { checkPairs, findDuplicates, type Duplicate, type Medication, type PairResult } from "./lib/interactions";
+import { forgetLists, recentLists, rememberList } from "./lib/recent";
 import { plainSummary } from "./lib/summary";
 
 /** The list lives in the URL (?meds=Advil,warfarin), so a check can be shared or bookmarked. */
@@ -48,6 +49,7 @@ const EXAMPLE = ["Coumadin", "Advil", "clarithromycin", "Lipitor"];
 export default function App() {
   const [names, setNames] = useState<string[]>(readList);
   const [state, setState] = useState<State>({ status: "idle" });
+  const [recent, setRecent] = useState<string[][]>(recentLists);
 
   useEffect(() => writeList(names), [names]);
 
@@ -91,6 +93,7 @@ export default function App() {
       const unlabeled = ingredients.filter((i) => !labels.has(i));
       const known = meds.filter((m) => m.ingredients.length);
       setState({ status: "done", pairs: checkPairs(known, labels), labels, missing, duplicates: findDuplicates(known), unlabeled });
+      setRecent(rememberList(names));
     } catch (error) {
       if (signal.aborted) return;
       setState({ status: "error", message: error instanceof Error ? error.message : "Something went wrong" });
@@ -127,6 +130,30 @@ export default function App() {
               </li>
             ))}
           </ul>
+        )}
+        {names.length === 0 && recent.length > 0 && (
+          <div className="recent">
+            <p>Recently checked on this device:</p>
+            <ul>
+              {recent.map((list) => (
+                <li key={list.join("|")}>
+                  <button type="button" className="link" onClick={() => setNames(list)}>
+                    {list.join(", ")}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className="link muted"
+              onClick={() => {
+                forgetLists();
+                setRecent([]);
+              }}
+            >
+              Forget these
+            </button>
+          </div>
         )}
         {names.length === 0 && (
           <p className="example">

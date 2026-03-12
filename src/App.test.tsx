@@ -9,6 +9,7 @@ const RXCUI: Record<string, string> = { coumadin: "1", advil: "2", metformin: "3
 const INGREDIENT: Record<string, string> = { "1": "Warfarin", "2": "Ibuprofen", "3": "Metformin" };
 
 beforeEach(() => {
+  localStorage.clear();
   window.history.replaceState(null, "", "/");
   vi.stubGlobal("fetch", async (input: string) => {
     const url = new URL(input);
@@ -87,6 +88,18 @@ describe("App", () => {
     await user.click(copy);
     expect(await navigator.clipboard.readText()).toContain("Coumadin + Advil");
     expect(screen.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+  });
+
+  it("offers lists checked before, and can forget them", async () => {
+    localStorage.setItem("rx-check:recent", JSON.stringify([["Coumadin", "Advil"]]));
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Coumadin, Advil" }));
+    expect(within(screen.getByRole("list", { name: "Your medications" })).getAllByRole("listitem")).toHaveLength(2);
+    await user.click(screen.getByRole("button", { name: "Remove Coumadin" }));
+    await user.click(screen.getByRole("button", { name: "Remove Advil" }));
+    await user.click(screen.getByRole("button", { name: "Forget these" }));
+    expect(screen.queryByText("Recently checked on this device:")).not.toBeInTheDocument();
   });
 
   it("explains network failures", async () => {

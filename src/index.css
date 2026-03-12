@@ -319,3 +319,22 @@ h2:focus {
 .how li + li {
   margin-top: 6px;
 }
+
+.recent {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.recent p {
+  margin: 0 0 4px;
+}
+
+.recent ul {
+  margin: 0 0 6px;
+  padding-left: 18px;
+}
+
+button.link.muted {
+  color: var(--muted);
+}
